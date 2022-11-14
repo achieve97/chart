@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/export-data.js"></script>
+  <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <title>Document</title>
+  <style>
+    .highcharts-figure,
+    .highcharts-data-table table {
+      min-width: 310px;
+      max-width: 800px;
+      margin: 1em auto;
+    }
+
+    #container {
+      height: 400px;
+    }
+
+    .highcharts-data-table table {
+      font-family: Verdana, sans-serif;
+      border-collapse: collapse;
+      border: 1px solid #ebebeb;
+      margin: 10px auto;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .highcharts-data-table caption {
+      padding: 1em 0;
+      font-size: 1.2em;
+      color: #555;
+    }
+
+    .highcharts-data-table th {
+      font-weight: 600;
+      padding: 0.5em;
+    }
+
+    .highcharts-data-table td,
+    .highcharts-data-table th,
+    .highcharts-data-table caption {
+      padding: 0.5em;
+    }
+
+    .highcharts-data-table thead tr,
+    .highcharts-data-table tr:nth-child(even) {
+      background: #f8f8f8;
+    }
+
+    .highcharts-data-table tr:hover {
+      background: #f1f7ff;
+    }
+  </style>
+
+  <script>
+
+    // 영화 이름, 5개
+    let categoryList = []; 
+    let seriesList = [
+      {
+        name: '해당일의 매출액 (억)',
+        data: []
+      },
+      {
+        name: '누적 매출액 (억)',
+        data: []
+      },
+      {
+        name: '오늘 관객수 (만)',
+        data: []
+      },
+      {
+        name: '누적 관객수 (만)',
+        data: []
+      }
+    ]
+
+    $(function () {
+      $.ajax(
+        {
+          type: "GET",
+          url: "https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json",
+          data: {
+            key: "f5eef3421c602c6cb7ea224104795888",
+            targetDt: "20221113"
+          },
+          success: function (data) {
+            console.log(data);
+            const result = data["boxOfficeResult"]["dailyBoxOfficeList"];
+            for(let i = 0; i < 5; ++i) {
+              categoryList.push(result[i]["movieNm"]);
+              seriesList[0].data.push(Number(result[i]["salesAmt"]) / 100000000);
+              seriesList[1].data.push(Number(result[i]["salesAcc"]) / 100000000);
+              seriesList[2].data.push(Number(result[i]["audiCnt"]) / 10000);
+              seriesList[3].data.push(Number(result[i]["audiAcc"]) / 10000);
+            }
+            console.log("=========================");
+            console.log(seriesList);
+            makeChart();
+          },
+          error: function () {
+            alert("실패");
+          }
+        }
+      )
+    })
+    function makeChart() {
+      Highcharts.chart('container', {
+        chart: {
+          type: 'bar'
+        },
+        title: {
+          text: '일별 박스오피스'
+        },
+        subtitle: {
+          text: 'Source: <a ' +
+            'href="https://en.wikipedia.org/wiki/List_of_continents_and_continental_subregions_by_population"' +
+            'target="_blank">Wikipedia.org</a>'
+        },
+        xAxis: {
+          categories: categoryList,
+          title: {
+            text: null
+          }
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: '어떻하지?',
+            align: 'high'
+          },
+          labels: {
+            overflow: 'justify'
+          }
+        },
+        tooltip: {
+          valueSuffix: '툴팁입니다'
+        },
+        plotOptions: {
+          bar: {
+            dataLabels: {
+              enabled: true
+            }
+          }
+        },
+        legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'top',
+          x: -40,
+          y: 80,
+          floating: true,
+          borderWidth: 1,
+          backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+          shadow: true
+        },
+        credits: {
+          enabled: false
+        },
+        series: seriesList
+      });
+    }
+  </script>
+
+</head>
+
+<body>
+  <figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+      대한민국 일별 박스오피스
+    </p>
+  </figure>
+</body>
+
+</html>
